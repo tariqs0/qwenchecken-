@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة وتربية الدواجن المتكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#16a34a',
+                        accent: '#f59e0b',
+                        danger: '#dc2626',
+                        dark: {
+                            bg: '#1e293b',
+                            card: '#334155',
+                            text: '#f1f5f9'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+        
+        * {
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .profit-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .loss-card {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+        }
+        
+        .dark .tab-active {
+            border-bottom: 3px solid #60a5fa;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark-bg text-gray-800 dark:text-dark-text transition-colors duration-300">
+    <!-- Header -->
+    <header class="bg-white dark:bg-dark-card shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <i class="fas fa-feather-alt text-4xl text-primary"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">نظام إدارة الدواجن المتكامل</h1>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">خبير تربية - إحصائي - محاسبي</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-moon text-xl" id="themeIcon"></i>
+                    </button>
+                    <button onclick="showNotification('مرحباً بك في نظام إدارة الدواجن', 'info')" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notificationBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white dark:bg-dark-card shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex overflow-x-auto scrollbar-hide">
+                <button onclick="switchTab('dashboard')" class="tab-btn tab-active px-6 py-4 font-medium whitespace-nowrap" data-tab="dashboard">
+                    <i class="fas fa-chart-line ml-2"></i>لوحة التحكم الرئيسية
+                </button>
+                <button onclick="switchTab('batches')" class="tab-btn px-6 py-4 font-medium whitespace-nowrap" data-tab="batches">
+                    <i class="fas fa-egg ml-2"></i>إدارة الدفعات
+                </button>
+                <button onclick="switchTab('incubators')" class="tab-btn px-6 py-4 font-medium whitespace-nowrap" data-tab="incubators">
+                    <i class="fas fa-box ml-2"></i>الحاضنات والفقاصات
+                </button>
+                <button onclick="switchTab('expenses')" class="tab-btn px-6 py-4 font-medium whitespace-nowrap" data-tab="expenses">
+                    <i class="fas fa-calculator ml-2"></i>المصاريف والمحاسبة
+                </button>
+                <button onclick="switchTab('statistics')" class="tab-btn px-6 py-4 font-medium whitespace-nowrap" data-tab="statistics">
+                    <i class="fas fa-chart-bar ml-2"></i>الإحصائيات والتقارير
+                </button>
+                <button onclick="switchTab('species')" class="tab-btn px-6 py-4 font-medium whitespace-nowrap" data-tab="species">
+                    <i class="fas fa-dove ml-2"></i>أنواع الدواجن
+                </button>
+                <button onclick="switchTab('guides')" class="tab-btn px-6 py-4 font-medium whitespace-nowrap" data-tab="guides">
+                    <i class="fas fa-book ml-2"></i>الأدلة والإرشادات
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content fade-in">
+            <div class="dashboard-grid mb-6">
+                <div class="stat-card card rounded-xl p-6 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm opacity-80">إجمالي الدفعات النشطة</p>
+                            <h3 class="text-4xl font-bold mt-2" id="totalBatches">0</h3>
+                        </div>
+                        <i class="fas fa-egg text-5xl opacity-50"></i>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <i class="fas fa-arrow-up ml-1"></i>
+                        <span>دفعات قيد التربية</span>
+                    </div>
+                </div>
+                
+                <div class="profit-card card rounded-xl p-6 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm opacity-80">صافي الربح الإجمالي</p>
+                            <h3 class="text-4xl font-bold mt-2" id="totalProfit">0 ر.س</h3>
+                        </div>
+                        <i class="fas fa-coins text-5xl opacity-50"></i>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <i class="fas fa-percent ml-1"></i>
+                        <span id="profitMargin">0%</span> نسبة الربح
+                    </div>
+                </div>
+                
+                <div class="loss-card card rounded-xl p-6 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm opacity-80">إجمالي المصاريف</p>
+                            <h3 class="text-4xl font-bold mt-2" id="totalExpenses">0 ر.س</h3>
+                        </div>
+                        <i class="fas fa-file-invoice-dollar text-5xl opacity-50"></i>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <i class="fas fa-exclamation-triangle ml-1"></i>
+                        <span>تشمل العلف والكهرباء والماء</span>
+                    </div>
+                </div>
+                
+                <div class="card rounded-xl p-6 bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm opacity-80">رأس المال المستثمر</p>
+                            <h3 class="text-4xl font-bold mt-2" id="totalCapital">0 ر.س</h3>
+                        </div>
+                        <i class="fas fa-wallet text-5xl opacity-50"></i>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <i class="fas fa-chart-pie ml-1"></i>
+                        <span>استثمارات حالية</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts and Notifications -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-exclamation-circle text-accent ml-2"></i>
+                        تنبيهات هامة
+                    </h3>
+                    <div id="alertsList" class="space-y-3">
+                        <!-- Alerts will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-tasks ml-2"></i>
+                        مهام اليوم
+                    </h3>
+                    <div id="tasksList" class="space-y-3">
+                        <!-- Tasks will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats by Species -->
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold mb-4">نظرة عامة على الأنواع</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b dark:border-gray-700">
+                                <th class="text-right py-3 px-4">النوع</th>
+                                <th class="text-right py-3 px-4">عدد الدفعات</th>
+                                <th class="text-right py-3 px-4">إجمالي الطيور</th>
+                                <th class="text-right py-3 px-4">الأرباح</th>
+                                <th class="text-right py-3 px-4">الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="speciesOverview">
+                            <!-- Data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batches Management Tab -->
+        <div id="batches" class="tab-content hidden fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">إدارة الدفعات</h2>
+                <button onclick="openModal('batchModal')" class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
+                    <i class="fas fa-plus ml-2"></i>إضافة دفعة جديدة
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="batchesGrid">
+                <!-- Batch cards will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Incubators Tab -->
+        <div id="incubators" class="tab-content hidden fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">إدارة الحاضنات والفقاصات</h2>
+                <button onclick="openModal('incubatorModal')" class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
+                    <i class="fas fa-plus ml-2"></i>إضافة حاضنة جديدة
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="incubatorsGrid">
+                <!-- Incubator cards will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Expenses Tab -->
+        <div id="expenses" class="tab-content hidden fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">المصاريف والمحاسبة</h2>
+                <button onclick="openModal('expenseModal')" class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center">
+                    <i class="fas fa-plus ml-2"></i>تسجيل مصروف جديد
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold mb-2">مصاريف العلف</h3>
+                    <p class="text-3xl font-bold text-primary" id="feedExpenses">0 ر.س</p>
+                </div>
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold mb-2">مصاريف الكهرباء والماء</h3>
+                    <p class="text-3xl font-bold text-accent" id="utilityExpenses">0 ر.س</p>
+                </div>
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold mb-2">مصاريف أخرى</h3>
+                    <p class="text-3xl font-bold text-danger" id="otherExpenses">0 ر.س</p>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold mb-4">سجل المصاريف</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b dark:border-gray-700">
+                                <th class="text-right py-3 px-4">التاريخ</th>
+                                <th class="text-right py-3 px-4">النوع</th>
+                                <th class="text-right py-3 px-4">الوصف</th>
+                                <th class="text-right py-3 px-4">الدفعة</th>
+                                <th class="text-right py-3 px-4">المبلغ</th>
+                                <th class="text-right py-3 px-4">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesTable">
+                            <!-- Expenses will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div id="statistics" class="tab-content hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6">الإحصائيات والتقارير</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">توزيع أنواع الدواجن</h3>
+                    <canvas id="speciesChart"></canvas>
+                </div>
+                
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">الأرباح الشهرية</h3>
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">تحليل الأداء حسب النوع</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b dark:border-gray-700">
+                                <th class="text-right py-3 px-4">النوع</th>
+                                <th class="text-right py-3 px-4">إجمالي الإنتاج</th>
+                                <th class="text-right py-3 px-4">نسبة الفقس</th>
+                                <th class="text-right py-3 px-4">متوسط الوزن</th>
+                                <th class="text-right py-3 px-4">العائد على الاستثمار</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performanceTable">
+                            <!-- Performance data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Species Information Tab -->
+        <div id="species" class="tab-content hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6">أنواع الدواجن والطيور</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="speciesGrid">
+                <!-- Species cards will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Guides Tab -->
+        <div id="guides" class="tab-content hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6">الأدلة والإرشادات</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-thermometer-half text-accent ml-2"></i>
+                        درجات الحرارة والرطوبة
+                    </h3>
+                    <div id="temperatureGuide" class="space-y-4">
+                        <!-- Temperature guides will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-utensils text-secondary ml-2"></i>
+                        برامج التغذية
+                    </h3>
+                    <div id="feedingGuide" class="space-y-4">
+                        <!-- Feeding guides will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- Batch Modal -->
+    <div id="batchModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">إضافة دفعة جديدة</h3>
+                    <button onclick="closeModal('batchModal')" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <form id="batchForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">نوع الدواجن</label>
+                            <select id="batchSpecies" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                                <option value="">اختر النوع...</option>
+                                <option value="quail_texas">سمان تكساس</option>
+                                <option value="quail_local">سمان بلدي</option>
+                                <option value="chicken_broiler">دجاج لحم (فروج)</option>
+                                <option value="chicken_layer">دجاج بياض</option>
+                                <option value="chicken_baladi">دجاج بلدي</option>
+                                <option value="duck">بط</option>
+                                <option value="goose">وز</option>
+                                <option value="turkey">رومي</option>
+                                <option value="rare_1">دواجن نادرة نوع 1</option>
+                                <option value="rare_2">دواجن نادرة نوع 2</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">مرحلة البدء</label>
+                            <select id="batchStage" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                                <option value="egg">بيض (حضانة)</option>
+                                <option value="chick">صوص/فرخ صغير</option>
+                                <option value="juvenile">فرخ متوسط</option>
+                                <option value="adult">بالغ</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">العدد</label>
+                            <input type="number" id="batchQuantity" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" min="1" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">تاريخ البدء</label>
+                            <input type="date" id="batchStartDate" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">سعر الشراء للوحدة</label>
+                            <input type="number" id="batchPurchasePrice" step="0.01" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">رأس المال invested</label>
+                            <input type="number" id="batchCapital" step="0.01" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4 space-x-reverse">
+                        <button type="button" onclick="closeModal('batchModal')" class="px-6 py-3 border dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            حفظ الدفعة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incubator Modal -->
+    <div id="incubatorModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">إضافة حاضنة/فقاسة جديدة</h3>
+                    <button onclick="closeModal('incubatorModal')" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <form id="incubatorForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">نوع الجهاز</label>
+                            <select id="incubatorType" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                                <option value="incubator">حاضنة</option>
+                                <option value="hatcher">فقاسة</option>
+                                <option value="battery">بطارية تربية</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">النوع</label>
+                            <select id="incubatorCategory" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                                <option value="automatic">أوتوماتيك بالكامل</option>
+                                <option value="semi-automatic">شبه أوتوماتيك</option>
+                                <option value="manual">يدوي</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">السعة (عدد البيض)</label>
+                            <input type="number" id="incubatorCapacity" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">نوع البيض المدعوم</label>
+                            <select id="incubatorEggType" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                                <option value="all">جميع الأنواع</option>
+                                <option value="quail">سمان فقط</option>
+                                <option value="chicken">دجاج فقط</option>
+                                <option value="mixed">مختلط</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">سعر الشراء</label>
+                            <input type="number" id="incubatorPrice" step="0.01" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">تاريخ الشراء</label>
+                            <input type="date" id="incubatorPurchaseDate" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4 space-x-reverse">
+                        <button type="button" onclick="closeModal('incubatorModal')" class="px-6 py-3 border dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            حفظ الجهاز
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card rounded-xl shadow-2xl max-w-2xl w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">تسجيل مصروف جديد</h3>
+                    <button onclick="closeModal('expenseModal')" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <form id="expenseForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">نوع المصروف</label>
+                            <select id="expenseType" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                                <option value="feed">علف</option>
+                                <option value="electricity">كهرباء</option>
+                                <option value="water">ماء</option>
+                                <option value="medicine">أدوية وعلاجات</option>
+                                <option value="maintenance">صيانة</option>
+                                <option value="equipment">معدات</option>
+                                <option value="transport">نقل</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">المبلغ</label>
+                            <input type="number" id="expenseAmount" step="0.01" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الدفعة المرتبطة</label>
+                            <select id="expenseBatch" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary">
+                                <option value="">عام (غير مرتبط)</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">التاريخ</label>
+                            <input type="date" id="expenseDate" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الوصف</label>
+                        <textarea id="expenseDescription" rows="3" class="w-full px-4 py-3 rounded-lg border dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-primary" placeholder="وصف تفصيلي للمصروف..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4 space-x-reverse">
+                        <button type="button" onclick="closeModal('expenseModal')" class="px-6 py-3 border dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            حفظ المصروف
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-4 left-4 bg-white dark:bg-dark-card shadow-lg rounded-lg p-4 hidden z-50 transform translate-y-20 transition-transform duration-300">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <i id="toastIcon" class="fas fa-info-circle text-2xl text-primary"></i>
+            <div>
+                <h4 id="toastTitle" class="font-bold"></h4>
+                <p id="toastMessage" class="text-sm text-gray-600 dark:text-gray-400"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let appData = {
+            batches: [],
+            incubators: [],
+            expenses: [],
+            species: [],
+            settings: {
+                darkMode: false
+            }
+        };
+
+        // Species Database
+        const speciesDatabase = {
+            quail_texas: {
+                name: 'سمان تكساس',
+                type: 'quail',
+                lifespan: 45,
+                incubationDays: 17,
+                chickStage: 14,
+                juvenileStage: 30,
+                adultStage: 45,
+                optimalTemp: { egg: 37.5, chick: 35, juvenile: 28, adult: 24 },
+                optimalHumidity: { egg: 60, chick: 65, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة سمان', juvenile: 'نامي سمان', adult: 'ناهي سمان' },
+                prices: { egg: 0.5, chick: 3, juvenile: 8, adult: 12, pair: 20, group: 35 },
+                weight: { adult: 250 },
+                notes: 'سمان تكساس من أفضل أنواع السمان للإنتاج اللحمي، يتميز بسرعة النمو وكبر الحجم'
+            },
+            quail_local: {
+                name: 'سمان بلدي',
+                type: 'quail',
+                lifespan: 40,
+                incubationDays: 17,
+                chickStage: 14,
+                juvenileStage: 28,
+                adultStage: 40,
+                optimalTemp: { egg: 37.5, chick: 35, juvenile: 28, adult: 24 },
+                optimalHumidity: { egg: 60, chick: 65, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة سمان', juvenile: 'نامي سمان', adult: 'ناهي سمان' },
+                prices: { egg: 0.4, chick: 2.5, juvenile: 6, adult: 10, pair: 16, group: 28 },
+                weight: { adult: 180 },
+                notes: 'السمان البلدي أكثر مقاومة للأمراض ومناسب للتربية التقليدية'
+            },
+            chicken_broiler: {
+                name: 'دجاج لحم (فروج)',
+                type: 'chicken',
+                lifespan: 42,
+                incubationDays: 21,
+                chickStage: 10,
+                juvenileStage: 25,
+                adultStage: 42,
+                optimalTemp: { egg: 37.5, chick: 33, juvenile: 26, adult: 22 },
+                optimalHumidity: { egg: 55, chick: 60, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة فروج', juvenile: 'نامي فروج', adult: 'ناهي فروج' },
+                prices: { egg: 1, chick: 5, juvenile: 15, adult: 25, kg: 12 },
+                weight: { adult: 2500 },
+                notes: 'دجاج اللحم ينمو بسرعة ويصل لوزن الذبح خلال 6 أسابيع'
+            },
+            chicken_layer: {
+                name: 'دجاج بياض',
+                type: 'chicken',
+                lifespan: 500,
+                incubationDays: 21,
+                chickStage: 10,
+                juvenileStage: 120,
+                adultStage: 500,
+                optimalTemp: { egg: 37.5, chick: 33, juvenile: 26, adult: 22 },
+                optimalHumidity: { egg: 55, chick: 60, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة بياض', juvenile: 'نامي بياض', adult: 'بياض إنتاج' },
+                prices: { egg: 1.5, chick: 8, juvenile: 25, adult: 45, dozen_eggs: 15 },
+                weight: { adult: 1800 },
+                notes: 'دجاج البياض متخصص في إنتاج البيض ويمكن أن ينتج أكثر من 300 بيضة سنوياً'
+            },
+            chicken_baladi: {
+                name: 'دجاج بلدي',
+                type: 'chicken',
+                lifespan: 365,
+                incubationDays: 21,
+                chickStage: 14,
+                juvenileStage: 90,
+                adultStage: 365,
+                optimalTemp: { egg: 37.5, chick: 33, juvenile: 26, adult: 22 },
+                optimalHumidity: { egg: 55, chick: 60, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة بلدي', juvenile: 'نامي بلدي', adult: 'بلدي حر' },
+                prices: { egg: 2, chick: 10, juvenile: 30, adult: 60, kg: 25 },
+                weight: { adult: 1500 },
+                notes: 'الدجاج البلدي مقاوم للأمراض ومناسب للتربية الحرة، لحمه ذو جودة عالية'
+            },
+            duck: {
+                name: 'بط',
+                type: 'waterfowl',
+                lifespan: 365,
+                incubationDays: 28,
+                chickStage: 14,
+                juvenileStage: 60,
+                adultStage: 365,
+                optimalTemp: { egg: 37.5, chick: 32, juvenile: 24, adult: 20 },
+                optimalHumidity: { egg: 65, chick: 70, juvenile: 60, adult: 55 },
+                feedType: { egg: 'بدون', chick: 'بادئة بط', juvenile: 'نامي بط', adult: 'ناهي بط' },
+                prices: { egg: 2, chick: 12, juvenile: 35, adult: 70, kg: 20 },
+                weight: { adult: 3000 },
+                notes: 'البط يحتاج إلى مساحة مائية ويتحمل البرودة أكثر من الدجاج'
+            },
+            goose: {
+                name: 'وز',
+                type: 'waterfowl',
+                lifespan: 365,
+                incubationDays: 30,
+                chickStage: 14,
+                juvenileStage: 90,
+                adultStage: 365,
+                optimalTemp: { egg: 37.5, chick: 32, juvenile: 24, adult: 18 },
+                optimalHumidity: { egg: 65, chick: 70, juvenile: 60, adult: 55 },
+                feedType: { egg: 'بدون', chick: 'بادئة وز', juvenile: 'نامي وز', adult: 'ناهي وز' },
+                prices: { egg: 3, chick: 20, juvenile: 60, adult: 120, kg: 25 },
+                weight: { adult: 5000 },
+                notes: 'الوز من أكبر الطيور الداجنة، يحتاج مساحة كبيرة ورعي'
+            },
+            turkey: {
+                name: 'رومي',
+                type: 'poultry',
+                lifespan: 180,
+                incubationDays: 28,
+                chickStage: 14,
+                juvenileStage: 90,
+                adultStage: 180,
+                optimalTemp: { egg: 37.5, chick: 35, juvenile: 26, adult: 22 },
+                optimalHumidity: { egg: 60, chick: 65, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة رومي', juvenile: 'نامي رومي', adult: 'ناهي رومي' },
+                prices: { egg: 4, chick: 25, juvenile: 80, adult: 200, kg: 30 },
+                weight: { adult: 8000 },
+                notes: 'الرومي من الطيور الكبيرة، يحتاج علف عالي البروتين ورعاية خاصة'
+            },
+            rare_1: {
+                name: 'دواجن نادرة نوع 1',
+                type: 'rare',
+                lifespan: 365,
+                incubationDays: 21,
+                chickStage: 14,
+                juvenileStage: 90,
+                adultStage: 365,
+                optimalTemp: { egg: 37.5, chick: 33, juvenile: 26, adult: 22 },
+                optimalHumidity: { egg: 55, chick: 60, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة خاصة', juvenile: 'نامي خاص', adult: 'ناهي خاص' },
+                prices: { egg: 10, chick: 50, juvenile: 150, adult: 300, pair: 500 },
+                weight: { adult: 2000 },
+                notes: 'من الأنواع النادرة والمطلوبة لهواة التجمع، أسعارها مرتفعة'
+            },
+            rare_2: {
+                name: 'دواجن نادرة نوع 2',
+                type: 'rare',
+                lifespan: 365,
+                incubationDays: 24,
+                chickStage: 14,
+                juvenileStage: 90,
+                adultStage: 365,
+                optimalTemp: { egg: 37.5, chick: 33, juvenile: 26, adult: 22 },
+                optimalHumidity: { egg: 55, chick: 60, juvenile: 55, adult: 50 },
+                feedType: { egg: 'بدون', chick: 'بادئة خاصة', juvenile: 'نامي خاص', adult: 'ناهي خاص' },
+                prices: { egg: 15, chick: 75, juvenile: 200, adult: 400, pair: 700 },
+                weight: { adult: 2500 },
+                notes: 'نوع نادر جداً، يحتاج رعاية خاصة ودرجة حرارة مضبوطة'
+            }
+        };
+
+        // Initialize App
+        function initApp() {
+            loadData();
+            applyTheme();
+            updateDashboard();
+            renderAllComponents();
+            setupEventListeners();
+            startDailyUpdates();
+        }
+
+        // Load Data from LocalStorage
+        function loadData() {
+            const saved = localStorage.getItem('poultryApp');
+            if (saved) {
+                appData = JSON.parse(saved);
+            }
+        }
+
+        // Save Data to LocalStorage
+        function saveData() {
+            localStorage.setItem('poultryApp', JSON.stringify(appData));
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            appData.settings.darkMode = !appData.settings.darkMode;
+            saveData();
+            applyTheme();
+        }
+
+        function applyTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            
+            if (appData.settings.darkMode) {
+                html.classList.add('dark');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                html.classList.remove('dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+            });
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('tab-active');
+            
+            // Refresh data when switching tabs
+            if (tabId === 'dashboard') updateDashboard();
+            if (tabId === 'batches') renderBatches();
+            if (tabId === 'incubators') renderIncubators();
+            if (tabId === 'expenses') renderExpenses();
+            if (tabId === 'statistics') renderStatistics();
+            if (tabId === 'species') renderSpecies();
+            if (tabId === 'guides') renderGuides();
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            if (modalId === 'expenseModal') {
+                populateBatchDropdown();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            document.getElementById('batchForm').addEventListener('submit', handleBatchSubmit);
+            document.getElementById('incubatorForm').addEventListener('submit', handleIncubatorSubmit);
+            document.getElementById('expenseForm').addEventListener('submit', handleExpenseSubmit);
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('batchStartDate').value = today;
+            document.getElementById('incubatorPurchaseDate').value = today;
+            document.getElementById('expenseDate').value = today;
+        }
+
+        // Form Handlers
+        function handleBatchSubmit(e) {
+            e.preventDefault();
+            
+            const batch = {
+                id: Date.now(),
+                species: document.getElementById('batchSpecies').value,
+                stage: document.getElementById('batchStage').value,
+                quantity: parseInt(document.getElementById('batchQuantity').value),
+                startDate: document.getElementById('batchStartDate').value,
+                purchasePrice: parseFloat(document.getElementById('batchPurchasePrice').value),
+                capital: parseFloat(document.getElementById('batchCapital').value),
+                status: 'active',
+                notes: []
+            };
+            
+            appData.batches.push(batch);
+            saveData();
+            closeModal('batchModal');
+            showNotification('تم إضافة الدفعة بنجاح', 'success');
+            renderBatches();
+            updateDashboard();
+        }
+
+        function handleIncubatorSubmit(e) {
+            e.preventDefault();
+            
+            const incubator = {
+                id: Date.now(),
+                type: document.getElementById('incubatorType').value,
+                category: document.getElementById('incubatorCategory').value,
+                capacity: parseInt(document.getElementById('incubatorCapacity').value),
+                eggType: document.getElementById('incubatorEggType').value,
+                price: parseFloat(document.getElementById('incubatorPrice').value),
+                purchaseDate: document.getElementById('incubatorPurchaseDate').value,
+                status: 'available',
+                currentCycle: null
+            };
+            
+            appData.incubators.push(incubator);
+            saveData();
+            closeModal('incubatorModal');
+            showNotification('تم إضافة الجهاز بنجاح', 'success');
+            renderIncubators();
+        }
+
+        function handleExpenseSubmit(e) {
+            e.preventDefault();
+            
+            const expense = {
+                id: Date.now(),
+                type: document.getElementById('expenseType').value,
+                amount: parseFloat(document.getElementById('expenseAmount').value),
+                batchId: document.getElementById('expenseBatch').value || null,
+                date: document.getElementById('expenseDate').value,
+                description: document.getElementById('expenseDescription').value
+            };
+            
+            appData.expenses.push(expense);
+            saveData();
+            closeModal('expenseModal');
+            showNotification('تم تسجيل المصروف بنجاح', 'success');
+            renderExpenses();
+            updateDashboard();
+        }
+
+        // Render Functions
+        function renderAllComponents() {
+            renderBatches();
+            renderIncubators();
+            renderExpenses();
+            renderSpecies();
+            renderGuides();
+        }
+
+        function renderBatches() {
+            const grid = document.getElementById('batchesGrid');
+            grid.innerHTML = '';
+            
+            appData.batches.forEach(batch => {
+                const species = speciesDatabase[batch.species];
+                const daysOld = calculateDaysOld(batch.startDate);
+                const progress = Math.min((daysOld / species.lifespan) * 100, 100);
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 card';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold">${species.name}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">المرحلة: ${getStageName(batch.stage)}</p>
+                        </div>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">
+                            نشط
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">العدد</p>
+                            <p class="text-2xl font-bold">${batch.quantity}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">العمر (أيام)</p>
+                            <p class="text-2xl font-bold">${daysOld}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">رأس المال</p>
+                            <p class="text-lg font-bold text-primary">${batch.capital.toLocaleString()} ر.س</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">سعر الشراء</p>
+                            <p class="text-lg font-bold">${batch.purchasePrice.toLocaleString()} ر.س</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>تقدم الدورة</span>
+                            <span>${Math.round(progress)}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <button onclick="viewBatchDetails(${batch.id})" class="text-primary hover:text-blue-700 font-medium">
+                            عرض التفاصيل
+                        </button>
+                        <div class="flex space-x-2 space-x-reverse">
+                            <button onclick="editBatch(${batch.id})" class="p-2 text-gray-500 hover:text-primary">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteBatch(${batch.id})" class="p-2 text-gray-500 hover:text-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderIncubators() {
+            const grid = document.getElementById('incubatorsGrid');
+            grid.innerHTML = '';
+            
+            appData.incubators.forEach(incubator => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 card';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold">${getIncubatorTypeName(incubator.type)}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">النوع: ${getIncubatorCategoryName(incubator.category)}</p>
+                        </div>
+                        <span class="px-3 py-1 ${incubator.status === 'available' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'} rounded-full text-sm">
+                            ${incubator.status === 'available' ? 'متاح' : 'مشغول'}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">السعة</p>
+                            <p class="text-2xl font-bold">${incubator.capacity} بيضة</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">نوع البيض</p>
+                            <p class="text-lg font-bold">${getEggTypeName(incubator.eggType)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">سعر الشراء</p>
+                            <p class="text-lg font-bold text-primary">${incubator.price.toLocaleString()} ر.س</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">تاريخ الشراء</p>
+                            <p class="text-sm font-bold">${incubator.purchaseDate}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <button onclick="startIncubatorCycle(${incubator.id})" class="text-primary hover:text-blue-700 font-medium">
+                            بدء دورة جديدة
+                        </button>
+                        <div class="flex space-x-2 space-x-reverse">
+                            <button onclick="editIncubator(${incubator.id})" class="p-2 text-gray-500 hover:text-primary">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteIncubator(${incubator.id})" class="p-2 text-gray-500 hover:text-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderExpenses() {
+            const table = document.getElementById('expensesTable');
+            table.innerHTML = '';
+            
+            let feedTotal = 0, utilityTotal = 0, otherTotal = 0;
+            
+            appData.expenses.forEach(expense => {
+                if (expense.type === 'feed') feedTotal += expense.amount;
+                else if (['electricity', 'water'].includes(expense.type)) utilityTotal += expense.amount;
+                else otherTotal += expense.amount;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b dark:border-gray-700';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${expense.date}</td>
+                    <td class="py-3 px-4">${getExpenseTypeName(expense.type)}</td>
+                    <td class="py-3 px-4">${expense.description}</td>
+                    <td class="py-3 px-4">${expense.batchId ? 'دفعة #' + expense.batchId : 'عام'}</td>
+                    <td class="py-3 px-4 font-bold">${expense.amount.toLocaleString()} ر.س</td>
+                    <td class="py-3 px-4">
+                        <button onclick="deleteExpense(${expense.id})" class="text-danger hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                table.appendChild(row);
+            });
+            
+            document.getElementById('feedExpenses').textContent = feedTotal.toLocaleString() + ' ر.س';
+            document.getElementById('utilityExpenses').textContent = utilityTotal.toLocaleString() + ' ر.س';
+            document.getElementById('otherExpenses').textContent = otherTotal.toLocaleString() + ' ر.س';
+        }
+
+        function renderSpecies() {
+            const grid = document.getElementById('speciesGrid');
+            grid.innerHTML = '';
+            
+            Object.entries(speciesDatabase).forEach(([key, species]) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 card';
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <i class="fas ${getSpeciesIcon(species.type)} text-4xl text-primary ml-4"></i>
+                        <div>
+                            <h3 class="text-xl font-bold">${species.name}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">${species.notes}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">فترة الحياة</p>
+                            <p class="font-bold">${species.lifespan} يوم</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">أيام الحضانة</p>
+                            <p class="font-bold">${species.incubationDays} يوم</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">الوزن البالغ</p>
+                            <p class="font-bold">${species.weight.adult} جرام</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">درجة الحرارة المثلى</p>
+                            <p class="font-bold">${species.optimalTemp.adult}°م</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t dark:border-gray-700 pt-4">
+                        <h4 class="font-bold mb-2">أسعار البيع المقترحة:</h4>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            ${Object.entries(species.prices).map(([stage, price]) => `
+                                <div class="flex justify-between">
+                                    <span>${getStageName(stage)}:</span>
+                                    <span class="font-bold">${price} ر.س</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderGuides() {
+            const tempGuide = document.getElementById('temperatureGuide');
+            const feedGuide = document.getElementById('feedingGuide');
+            
+            tempGuide.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">درجات حرارة التفقيس (السمان)</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><strong>الأيام 1-7:</strong> 37.5°م، رطوبة 60%</li>
+                            <li><strong>الأيام 8-14:</strong> 37.5°م، رطوبة 55%</li>
+                            <li><strong>الأيام 15-17:</strong> 37.2°م، رطوبة 65-70%</li>
+                        </ul>
+                        <p class="text-xs mt-2 text-warning"><i class="fas fa-exclamation-triangle"></i> آخر 3 أيام لا تفتح الفقاصة للحفاظ على الرطوبة</p>
+                    </div>
+                    
+                    <div class="bg-orange-50 dark:bg-orange-900 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">درجات حرارة التفقيس (الدجاج)</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><strong>الأيام 1-18:</strong> 37.5°م، رطوبة 55%</li>
+                            <li><strong>الأيام 19-21:</strong> 37.2°م، رطوبة 65-70%</li>
+                        </ul>
+                        <p class="text-xs mt-2 text-warning"><i class="fas fa-exclamation-triangle"></i> اليوم 7: فحص البيض وإزالة غير المخصب</p>
+                    </div>
+                    
+                    <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">درجات حرارة التربية</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><strong>الصوص (1-7 أيام):</strong> 35°م ثم إنخفاض تدريجي</li>
+                            <li><strong>الفرخ (8-21 يوم):</strong> 28-32°م</li>
+                            <li><strong>نامي (22-35 يوم):</strong> 24-28°م</li>
+                            <li><strong>بالغ:</strong> 20-24°م</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            feedGuide.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-purple-50 dark:bg-purple-900 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">برنامج تغذية السمان</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><strong>1-14 يوم:</strong> علف بادئة 28% بروتين، 40 جرام/يوم</li>
+                            <li><strong>15-30 يوم:</strong> علف نامي 24% بروتين، 50 جرام/يوم</li>
+                            <li><strong>31+ يوم:</strong> علف ناهي 20% بروتين، 60 جرام/يوم</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">برنامج تغذية دجاج اللحم</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><strong>1-10 أيام:</strong> علف بادئة 23% بروتين</li>
+                            <li><strong>11-25 يوم:</strong> علف نامي 20% بروتين</li>
+                            <li><strong>26-42 يوم:</strong> علف ناهي 18% بروتين</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-pink-50 dark:bg-pink-900 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">برنامج تغذية دجاج البياض</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><strong>1-8 أسبوع:</strong> علف بادئة 20% بروتين</li>
+                            <li><strong>9-18 أسبوع:</strong> علف نامي 16% بروتين</li>
+                            <li><strong>19+ أسبوع:</strong> علف بياض 18% بروتين + كالسيوم</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDashboard() {
+            const totalBatches = appData.batches.filter(b => b.status === 'active').length;
+            const totalExpenses = appData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const totalCapital = appData.batches.reduce((sum, batch) => sum + batch.capital, 0);
+            
+            // Calculate profit (simplified)
+            const totalRevenue = appData.batches.reduce((sum, batch) => {
+                const species = speciesDatabase[batch.species];
+                return sum + (batch.quantity * species.prices.adult);
+            }, 0);
+            
+            const profit = totalRevenue - totalCapital - totalExpenses;
+            const profitMargin = totalCapital > 0 ? ((profit / totalCapital) * 100) : 0;
+            
+            document.getElementById('totalBatches').textContent = totalBatches;
+            document.getElementById('totalProfit').textContent = profit.toLocaleString() + ' ر.س';
+            document.getElementById('profitMargin').textContent = profitMargin.toFixed(1) + '%';
+            document.getElementById('totalExpenses').textContent = totalExpenses.toLocaleString() + ' ر.س';
+            document.getElementById('totalCapital').textContent = totalCapital.toLocaleString() + ' ر.с';
+            
+            // Update alerts
+            updateAlerts();
+            
+            // Update tasks
+            updateTasks();
+            
+            // Update species overview
+            updateSpeciesOverview();
+        }
+
+        function updateAlerts() {
+            const alertsList = document.getElementById('alertsList');
+            alertsList.innerHTML = '';
+            
+            const alerts = [];
+            
+            // Check batches nearing end of cycle
+            appData.batches.forEach(batch => {
+                const species = speciesDatabase[batch.species];
+                const daysOld = calculateDaysOld(batch.startDate);
+                const remainingDays = species.lifespan - daysOld;
+                
+                if (remainingDays <= 5 && remainingDays > 0) {
+                    alerts.push({
+                        type: 'warning',
+                        message: `دفعة ${species.name} ستنتهي خلال ${remainingDays} أيام`,
+                        icon: 'fa-clock'
+                    });
+                }
+                
+                if (daysOld === 7 && batch.stage === 'egg') {
+                    alerts.push({
+                        type: 'info',
+                        message: `اليوم السابع: وقت فحص بيض ${species.name} وإزالة غير المخصب`,
+                        icon: 'fa-search'
+                    });
+                }
+            });
+            
+            // Check incubators
+            appData.incubators.forEach(inc => {
+                if (inc.status === 'running' && inc.cycleEnd) {
+                    const daysLeft = calculateDaysLeft(inc.cycleEnd);
+                    if (daysLeft <= 3) {
+                        alerts.push({
+                            type: 'warning',
+                            message: 'فقاسة ستنتهي خلال ' + daysLeft + ' أيام - لا تفتحها!',
+                            icon: 'fa-exclamation-triangle'
+                        });
+                    }
+                }
+            });
+            
+            alerts.forEach(alert => {
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-lg ${alert.type === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900 border-r-4 border-yellow-500' : 'bg-blue-50 dark:bg-blue-900 border-r-4 border-blue-500'}`;
+                div.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${alert.icon} ml-3 ${alert.type === 'warning' ? 'text-yellow-500' : 'text-blue-500'}"></i>
+                        <p class="text-sm">${alert.message}</p>
+                    </div>
+                `;
+                alertsList.appendChild(div);
+            });
+            
+            if (alerts.length === 0) {
+                alertsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">لا توجد تنبيهات حالياً</p>';
+            }
+            
+            // Update notification badge
+            const badge = document.getElementById('notificationBadge');
+            if (alerts.length > 0) {
+                badge.textContent = alerts.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function updateTasks() {
+            const tasksList = document.getElementById('tasksList');
+            tasksList.innerHTML = '';
+            
+            const tasks = [
+                { title: 'فحص درجة الحرارة والرطوبة', icon: 'fa-thermometer', priority: 'high' },
+                { title: 'تقديم العلف الطازج', icon: 'fa-utensils', priority: 'high' },
+                { title: 'تنظيف المساقي والمعالف', icon: 'fa-broom', priority: 'medium' },
+                { title: 'تسجيل النفوق إن وجد', icon: 'fa-clipboard', priority: 'medium' },
+                { title: 'مراقبة سلوك الطيور', icon: 'fa-eye', priority: 'low' }
+            ];
+            
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg';
+                div.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${task.icon} ml-3 text-primary"></i>
+                        <span class="text-sm">${task.title}</span>
+                    </div>
+                    <input type="checkbox" class="w-4 h-4 text-primary rounded">
+                `;
+                tasksList.appendChild(div);
+            });
+        }
+
+        function updateSpeciesOverview() {
+            const tbody = document.getElementById('speciesOverview');
+            tbody.innerHTML = '';
+            
+            const speciesCount = {};
+            
+            appData.batches.forEach(batch => {
+                if (!speciesCount[batch.species]) {
+                    speciesCount[batch.species] = { count: 0, birds: 0, profit: 0 };
+                }
+                speciesCount[batch.species].count++;
+                speciesCount[batch.species].birds += batch.quantity;
+            });
+            
+            Object.entries(speciesCount).forEach(([key, data]) => {
+                const species = speciesDatabase[key];
+                const row = document.createElement('tr');
+                row.className = 'border-b dark:border-gray-700';
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-bold">${species.name}</td>
+                    <td class="py-3 px-4">${data.count}</td>
+                    <td class="py-3 px-4">${data.birds}</td>
+                    <td class="py-3 px-4 text-green-600">0 ر.س</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs">جيد</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Helper Functions
+        function calculateDaysOld(startDate) {
+            const start = new Date(startDate);
+            const now = new Date();
+            const diff = now - start;
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function calculateDaysLeft(endDate) {
+            const end = new Date(endDate);
+            const now = new Date();
+            const diff = end - now;
+            return Math.ceil(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function getStageName(stage) {
+            const names = {
+                egg: 'بيض',
+                chick: 'صوص',
+                juvenile: 'فرخ',
+                adult: 'بالغ',
+                pair: 'زوج',
+                group: 'مجموعة'
+            };
+            return names[stage] || stage;
+        }
+
+        function getIncubatorTypeName(type) {
+            const names = {
+                incubator: 'حاضنة',
+                hatcher: 'فقاسة',
+                battery: 'بطارية تربية'
+            };
+            return names[type] || type;
+        }
+
+        function getIncubatorCategoryName(category) {
+            const names = {
+                automatic: 'أوتوماتيك',
+                semiAutomatic: 'شبه أوتوماتيك',
+                manual: 'يدوي'
+            };
+            return names[category] || category;
+        }
+
+        function getEggTypeName(type) {
+            const names = {
+                all: 'جميع الأنواع',
+                quail: 'سمان',
+                chicken: 'دجاج',
+                mixed: 'مختلط'
+            };
+            return names[type] || type;
+        }
+
+        function getExpenseTypeName(type) {
+            const names = {
+                feed: 'علف',
+                electricity: 'كهرباء',
+                water: 'ماء',
+                medicine: 'أدوية',
+                maintenance: 'صيانة',
+                equipment: 'معدات',
+                transport: 'نقل',
+                other: 'أخرى'
+            };
+            return names[type] || type;
+        }
+
+        function getSpeciesIcon(type) {
+            const icons = {
+                quail: 'fa-feather',
+                chicken: 'fa-crow',
+                waterfowl: 'fa-fish',
+                poultry: 'fa-dove',
+                rare: 'fa-star'
+            };
+            return icons[type] || 'fa-feather';
+        }
+
+        function populateBatchDropdown() {
+            const select = document.getElementById('expenseBatch');
+            select.innerHTML = '<option value="">عام (غير مرتبط)</option>';
+            appData.batches.forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.id;
+                option.textContent = `${speciesDatabase[batch.species].name} - ${batch.quantity} طائر`;
+                select.appendChild(option);
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const title = document.getElementById('toastTitle');
+            const msg = document.getElementById('toastMessage');
+            
+            const icons = {
+                success: 'fa-check-circle text-green-500',
+                error: 'fa-exclamation-circle text-red-500',
+                info: 'fa-info-circle text-blue-500',
+                warning: 'fa-exclamation-triangle text-yellow-500'
+            };
+            
+            const titles = {
+                success: 'نجاح',
+                error: 'خطأ',
+                info: 'معلومة',
+                warning: 'تنبيه'
+            };
+            
+            icon.className = `fas ${icons[type]} text-2xl`;
+            title.textContent = titles[type];
+            msg.textContent = message;
+            
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // Daily Updates
+        function startDailyUpdates() {
+            setInterval(() => {
+                updateDashboard();
+                saveData();
+            }, 60000); // Every minute
+        }
+
+        // CRUD Operations
+        function deleteBatch(id) {
+            if (confirm('هل أنت متأكد من حذف هذه الدفعة؟')) {
+                appData.batches = appData.batches.filter(b => b.id !== id);
+                saveData();
+                renderBatches();
+                updateDashboard();
+                showNotification('تم حذف الدفعة', 'success');
+            }
+        }
+
+        function deleteIncubator(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الجهاز؟')) {
+                appData.incubators = appData.incubators.filter(i => i.id !== id);
+                saveData();
+                renderIncubators();
+                showNotification('تم حذف الجهاز', 'success');
+            }
+        }
+
+        function deleteExpense(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المصروف؟')) {
+                appData.expenses = appData.expenses.filter(e => e.id !== id);
+                saveData();
+                renderExpenses();
+                updateDashboard();
+                showNotification('تم حذف المصروف', 'success');
+            }
+        }
+
+        function viewBatchDetails(id) {
+            const batch = appData.batches.find(b => b.id === id);
+            if (batch) {
+                const species = speciesDatabase[batch.species];
+                const daysOld = calculateDaysOld(batch.startDate);
+                
+                alert(`تفاصيل الدفعة:
+                
+النوع: ${species.name}
+العدد: ${batch.quantity}
+العمر: ${daysOld} يوم
+المرحلة الحالية: ${getStageName(batch.stage)}
+رأس المال: ${batch.capital} ر.س
+سعر الشراء: ${batch.purchasePrice} ر.س/وحدة
+
+التوصيات:
+- درجة الحرارة المثلى: ${species.optimalTemp[batch.stage] || species.optimalTemp.adult}°م
+- الرطوبة المثلى: ${species.optimalHumidity[batch.stage] || species.optimalHumidity.adult}%
+- نوع العلف: ${species.feedType[batch.stage] || species.feedType.adult}
+- سعر البيع المقترح: ${species.prices[batch.stage] || species.prices.adult} ر.س`);
+            }
+        }
+
+        function editBatch(id) {
+            showNotification('ميزة التعديل قيد التطوير', 'info');
+        }
+
+        function editIncubator(id) {
+            showNotification('ميزة التعديل قيد التطوير', 'info');
+        }
+
+        function startIncubatorCycle(id) {
+            const incubator = appData.incubators.find(i => i.id === id);
+            if (incubator) {
+                const species = prompt('أدخل نوع البيض (quail/chicken):');
+                const quantity = prompt('أدخل عدد البيض:');
+                
+                if (species && quantity) {
+                    incubator.status = 'running';
+                    incubator.currentCycle = {
+                        species: species,
+                        quantity: parseInt(quantity),
+                        startDate: new Date().toISOString()
+                    };
+                    saveData();
+                    renderIncubators();
+                    showNotification('تم بدء الدورة بنجاح', 'success');
+                }
+            }
+        }
+
+        function renderStatistics() {
+            // Placeholder for charts - can be enhanced with Chart.js
+            const performanceTable = document.getElementById('performanceTable');
+            performanceTable.innerHTML = '';
+            
+            Object.entries(speciesDatabase).forEach(([key, species]) => {
+                const batches = appData.batches.filter(b => b.species === key);
+                const totalBirds = batches.reduce((sum, b) => sum + b.quantity, 0);
+                
+                if (totalBirds > 0) {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 font-bold">${species.name}</td>
+                        <td class="py-3 px-4">${totalBirds}</td>
+                        <td class="py-3 px-4">85%</td>
+                        <td class="py-3 px-4">${species.weight.adult} جم</td>
+                        <td class="py-3 px-4 text-green-600">+15%</td>
+                    `;
+                    performanceTable.appendChild(row);
+                }
+            });
+        }
+
+        // Initialize the app
+        initApp();
+    </script>
+</body>
+</html>
