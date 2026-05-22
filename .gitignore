@@ -1,53 +1,48 @@
-#Examples 1:
+```
+# Dependencies
+node_modules/
+backend/node_modules/
+poultry-pro/node_modules/
 
-    Input:
-    ### Added files:
-    [src/main.py, README.md, config.json]
+# Dependency files
+package-lock.json
+backend/package-lock.json
+poultry-pro/package-lock.json
 
-    ### Deleted files:
-    [old/unused.py]
-    ### Modified files:
-    [utils.py]
-    ###current .gitignore Content
-    (empty)
-    Expected Output:
-    (empty — output nothing)
+# Database
+data/database.json
 
-# Example 2 (Project with artifacts):
-Input:
-### Added files:
-[pycache/main.cpython-310.pyc, dist/app.js, .env.local, .vscode/settings.json
+# Environment
+.env
+.env.local
+*.env.*
 
-### Deleted files:
-    []
-
-### Modified files:
-[]
-### current .gitignore Content
+# Logs
 *.log
-Expected Output:
-    #Compiled and build artifacts
-    *.pyc
-    pycache/
-    *.o
-    *.obj
-    dist/
-    build/
-    #Dependencies
-    .venv/
-    venv/
-    node_modules/
-    #Logs and temp files
-    *.log
-    *.tmp
-    *.swp
-    #Environment
-    .env
-    .env.local
-    .env.
-    #Editors
-    .vscode/
-    .idea/
-    #Original rules preserved
-    *.log
-Final reminder: Output ONLY the .gitignore content. If nothing should be ignored, output NOTHING.
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE files
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/
+target/
+coverage/
+htmlcov/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache/
+.mypy_cache/
+```
