@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الدواجن المتكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#16a34a',
+                        secondary: '#059669',
+                        accent: '#fbbf24'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-all">
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-egg text-3xl text-primary"></i>
+                        <h1 class="text-2xl font-bold text-primary">نظام إدارة الدواجن</h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">
+                            <i class="fas fa-moon dark:hidden"></i>
+                            <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+                        </button>
+                        <div class="hidden md:flex gap-2">
+                            <button onclick="showSection('dashboard')" class="nav-btn active px-4 py-2 rounded-lg bg-primary text-white hover:bg-secondary transition-all">
+                                <i class="fas fa-home ml-2"></i>الرئيسية
+                            </button>
+                            <button onclick="showSection('batches')" class="nav-btn px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-box ml-2"></i>الدفعات
+                            </button>
+                            <button onclick="showSection('incubators')" class="nav-btn px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-flask ml-2"></i>الحاضنات
+                            </button>
+                            <button onclick="showSection('expenses')" class="nav-btn px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-calculator ml-2"></i>المصاريف
+                            </button>
+                            <button onclick="showSection('statistics')" class="nav-btn px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-chart-line ml-2"></i>الإحصائيات
+                            </button>
+                            <button onclick="showSection('types')" class="nav-btn px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-book ml-2"></i>الأنواع
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-8">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg card-hover transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">إجمالي الدفعات</p>
+                                <h3 class="text-3xl font-bold text-primary mt-2" id="dash-total-batches">0</h3>
+                            </div>
+                            <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-box text-2xl text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg card-hover transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">الدفعات النشطة</p>
+                                <h3 class="text-3xl font-bold text-blue-500 mt-2" id="dash-active-batches">0</h3>
+                            </div>
+                            <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clock text-2xl text-blue-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg card-hover transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">صافي الربح</p>
+                                <h3 class="text-3xl font-bold text-green-500 mt-2" id="dash-net-profit">0 ر.س</h3>
+                            </div>
+                            <div class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-coins text-2xl text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg card-hover transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">نسبة الربح</p>
+                                <h3 class="text-3xl font-bold text-accent mt-2" id="dash-profit-margin">0%</h3>
+                            </div>
+                            <div class="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-percent text-2xl text-accent"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts & Notifications -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-bell text-accent"></i>
+                        تنبيهات هامة
+                    </h2>
+                    <div id="alerts-container" class="space-y-3">
+                        <!-- Alerts will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Recent Batches -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-list text-primary"></i>
+                        آخر الدفعات
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b dark:border-gray-700">
+                                    <th class="text-right py-3 px-4">النوع</th>
+                                    <th class="text-right py-3 px-4">العدد</th>
+                                    <th class="text-right py-3 px-4">العمر (يوم)</th>
+                                    <th class="text-right py-3 px-4">المرحلة</th>
+                                    <th class="text-right py-3 px-4">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-batches-table">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Batches Section -->
+            <section id="batches" class="section hidden">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold flex items-center gap-2">
+                            <i class="fas fa-box text-primary"></i>
+                            إدارة الدفعات
+                        </h2>
+                        <button onclick="openModal('batch-modal')" class="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-lg transition-all flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            إضافة دفعة جديدة
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                                    <th class="text-right py-3 px-4">النوع</th>
+                                    <th class="text-right py-3 px-4">تاريخ البدء</th>
+                                    <th class="text-right py-3 px-4">العدد الابتدائي</th>
+                                    <th class="text-right py-3 px-4">العدد الحالي</th>
+                                    <th class="text-right py-3 px-4">العمر (أيام)</th>
+                                    <th class="text-right py-3 px-4">المرحلة</th>
+                                    <th class="text-right py-3 px-4">الحالة</th>
+                                    <th class="text-right py-3 px-4">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batches-table">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Incubators Section -->
+            <section id="incubators" class="section hidden">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold flex items-center gap-2">
+                            <i class="fas fa-flask text-primary"></i>
+                            الحاضنات والفقاصات
+                        </h2>
+                        <button onclick="openModal('incubator-modal')" class="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-lg transition-all flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            إضافة حاضنة
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="incubators-grid">
+                        <!-- Incubators will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expenses Section -->
+            <section id="expenses" class="section hidden">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold flex items-center gap-2">
+                            <i class="fas fa-calculator text-primary"></i>
+                            المصاريف والمحاسبة
+                        </h2>
+                        <button onclick="openModal('expense-modal')" class="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-lg transition-all flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            إضافة مصروف
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">إجمالي المصاريف</p>
+                            <p class="text-2xl font-bold text-red-500" id="total-expenses">0 ر.س</p>
+                        </div>
+                        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">إجمالي الدخل</p>
+                            <p class="text-2xl font-bold text-green-500" id="total-income">0 ر.س</p>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">صافي الربح</p>
+                            <p class="text-2xl font-bold text-blue-500" id="net-profit-detail">0 ر.س</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                                    <th class="text-right py-3 px-4">النوع</th>
+                                    <th class="text-right py-3 px-4">الوصف</th>
+                                    <th class="text-right py-3 px-4">المبلغ</th>
+                                    <th class="text-right py-3 px-4">التاريخ</th>
+                                    <th class="text-right py-3 px-4">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenses-table">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section id="statistics" class="section hidden">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        الإحصائيات والتقارير
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <h3 class="font-bold mb-4">توزيع الطيور حسب النوع</h3>
+                            <div id="birds-by-type-chart" class="space-y-3">
+                                <!-- Chart data will be loaded here -->
+                            </div>
+                        </div>
+                        <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <h3 class="font-bold mb-4">ملخص الأداء المالي</h3>
+                            <div id="financial-summary" class="space-y-3">
+                                <!-- Financial data will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Types Section -->
+            <section id="types" class="section hidden">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <i class="fas fa-book text-primary"></i>
+                        أنواع الدواجن
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="types-grid">
+                        <!-- Types will be loaded here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <!-- Batch Modal -->
+        <div id="batch-modal" class="modal fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4">إضافة دفعة جديدة</h3>
+                <form onsubmit="saveBatch(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">نوع الدواجن</label>
+                        <select id="batch-type" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">تاريخ البدء</label>
+                            <input type="date" id="batch-start-date" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">مرحلة البدء</label>
+                            <select id="batch-start-stage" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                                <option value="egg">بيض</option>
+                                <option value="chick">كتاكيت</option>
+                                <option value="grower">نامية</option>
+                                <option value="adult">بالغة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">العدد الابتدائي</label>
+                            <input type="number" id="batch-initial-count" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required min="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">سعر الشراء للوحدة</label>
+                            <input type="number" step="0.01" id="batch-purchase-price" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required min="0">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                        <textarea id="batch-notes" rows="3" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></textarea>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-1 bg-primary hover:bg-secondary text-white py-3 rounded-lg transition-all">حفظ</button>
+                        <button type="button" onclick="closeModal('batch-modal')" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 py-3 rounded-lg transition-all">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Incubator Modal -->
+        <div id="incubator-modal" class="modal fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-2xl w-full mx-4">
+                <h3 class="text-xl font-bold mb-4">إضافة حاضنة جديدة</h3>
+                <form onsubmit="saveIncubator(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">اسم الحاضنة</label>
+                        <input type="text" id="incubator-name" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">السعة (بيضة)</label>
+                            <input type="number" id="incubator-capacity" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required min="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">النوع</label>
+                            <select id="incubator-type" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                                <option value="manual">يدوي</option>
+                                <option value="automatic">أوتوماتيك</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                        <textarea id="incubator-notes" rows="3" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></textarea>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-1 bg-primary hover:bg-secondary text-white py-3 rounded-lg transition-all">حفظ</button>
+                        <button type="button" onclick="closeModal('incubator-modal')" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 py-3 rounded-lg transition-all">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Expense Modal -->
+        <div id="expense-modal" class="modal fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-2xl w-full mx-4">
+                <h3 class="text-xl font-bold mb-4">إضافة مصروف جديد</h3>
+                <form onsubmit="saveExpense(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">نوع المصروف</label>
+                        <select id="expense-type" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                            <option value="feed">علف</option>
+                            <option value="water">ماء</option>
+                            <option value="electricity">كهرباء</option>
+                            <option value="medicine">أدوية</option>
+                            <option value="equipment">معدات</option>
+                            <option value="maintenance">صيانة</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الوصف</label>
+                        <input type="text" id="expense-description" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">المبلغ</label>
+                            <input type="number" step="0.01" id="expense-amount" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required min="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">التاريخ</label>
+                            <input type="date" id="expense-date" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="flex-1 bg-primary hover:bg-secondary text-white py-3 rounded-lg transition-all">حفظ</button>
+                        <button type="button" onclick="closeModal('expense-modal')" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 py-3 rounded-lg transition-all">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
